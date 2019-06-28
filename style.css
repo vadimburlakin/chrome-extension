@@ -1,0 +1,8 @@
+.popupButton {
+  border-radius: 3em;
+  color: #afeeee;
+}
+
+.popupButton:focus, textarea {
+    outline: none !important;
+}
