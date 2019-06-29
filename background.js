@@ -1,41 +1,67 @@
 let websites = {};
+let currentlyTrackedDomain = null;
+let startTracking = null;
 
-//listen for messages from popup
+
+//listen for messages
 chrome.runtime.onMessage.addListener(onMessage);
 
+//the one who desides what to do next depending on message
+function onMessage(message, sender, sendResponse) {
+  switch (message.type) {
+    case 'START_TRACKING':
+      {
+        handleStartTracking(message);
+        break;
+      }
+  }
+
+};
+
+//get the domain from URL
 function getDomainFromUrl(url) {
   const matches = url.match(/^(https?:\/\/[^\/]+)/);
   return matches[1];
 }
 
+//execute in case "track" button was clicked
 function handleStartTracking(message) {
-  if (websites[message.url] === undefined) {
-    websites[message.url ] = {
-      totalTime: 0
-    };
+
+  let domain = getDomainFromUrl(message.url);
+  currentlyTrackedDomain = domain;
+
+  if (websites[domain] === undefined) {
+    currentlyTrackedDomain = domain;
+    websites[domain] = 0;
+    startTracking = new Date();
+    console.log(websites);
   } else {
     alert("You are already tracking this website");
   }
 }
 
-function onMessage(message, sender, sendResponse) {
-  switch (message.type) {
-    case 'START_TRACKING': {
-      handleStartTracking(message);
-      break;
-    }
+chrome.tabs.onActivated.addListener(activeTabChange);
+
+//take actions in case active tab is changed
+function activeTabChange(activeInfo) {
+  if (currentlyTrackedDomain !== null) {
+    let currentTime = new Date();
+    websites[currentlyTrackedDomain] += Math.floor((currentTime - startTracking) / 1000);
   }
 
-};
+  //don't forget to clear the value
+  currentlyTrackedDomain = null;
 
-chrome.tabs.onActivated.addListener(whoIsActive);
+  chrome.tabs.get(activeInfo.tabId, getCurrentTabUrl);
 
-//let's track the active id
-function whoIsActive(activeInfo) {
-  let time = new Date();
-  console.log(activeInfo, time);
-  if (websites[activeInfo.id] !== undefined) {
+  //if we open a tab which we already track
+  function getCurrentTabUrl(tab) {
+    const domain = getDomainFromUrl(tab.url);
+    if (websites[domain] !== undefined) {
+      currentlyTrackedDomain = domain;
+      startTracking = new Date();
+    };
 
-  }
+    console.log(websites);
+  };
 }
-
