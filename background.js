@@ -20,8 +20,12 @@ function onMessage(message, sender, sendResponse) {
 
 //get the domain from URL
 function getDomainFromUrl(url) {
-  const matches = url.match(/^(https?:\/\/[^\/]+)/);
-  return matches[1];
+  if (url.includes("chrome://")) {
+    return url;
+  } else {
+    const matches = url.match(/^(https?:\/\/[^\/]+)/);
+    return matches[1];
+  }
 }
 
 //execute in case "track" button was clicked
@@ -34,7 +38,7 @@ function handleStartTracking(message) {
     currentlyTrackedDomain = domain;
     websites[domain] = 0;
     startTracking = new Date();
-    console.log(websites);
+
   } else {
     alert("You are already tracking this website");
   }
@@ -64,4 +68,34 @@ function activeTabChange(activeInfo) {
 
     console.log(websites);
   };
+}
+
+chrome.windows.onFocusChanged.addListener(windowChange);
+
+function windowChange(windowId) {
+
+  let getInfo = {
+    populate: true
+  }
+
+  chrome.windows.getCurrent(getInfo, getCurrentTab);
+
+  function getCurrentTab(window) {
+
+    if (currentlyTrackedDomain !== null) {
+      let currentTime = new Date();
+      websites[currentlyTrackedDomain] += Math.floor((currentTime - startTracking) / 1000);
+    } else if (window.tabs.length > 0) {
+      console.log(window.tabs);
+      let currentTab = window.tabs.filter(tab => tab.active === true);
+      const domain = getDomainFromUrl(currentTab[0].url);
+          if (websites[domain] !== undefined) {
+            currentlyTrackedDomain = domain;
+            startTracking = new Date();
+          }
+
+      console.log(window.tabs);
+      console.log(websites);
+    }
+  }
 }
