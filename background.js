@@ -29,7 +29,7 @@ function getDomainFromUrl(url) {
 
 //execute in case "track" button was clicked
 function handleStartTracking(message) {
-
+  console.log(message);
   let domain = getDomainFromUrl(message.url);
   currentlyTrackedDomain = domain;
 
@@ -77,24 +77,22 @@ function activeTabChange(activeInfo) {
     const domain = getDomainFromUrl(tab.url);
     handleChangedToTrackedDomain(domain);
 
-    //check if the domain within tracked tab is changed
-    chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
-
-    let tabId = tab.id
-
-    function handleTabsDomainChange(tabId, changeInfo, tab) {
-      let currentTabDomain = getDomainFromUrl(tab.url);
-      if (websites[currentTabDomain] === undefined) {
-        handleStopTracking();
-
-        console.log(websites);
-      } else {
-        // handleStartTracking(currentTabDomain);
-      }
-    };
-
-
     console.log(websites);
+  };
+
+  //check if the domain within the tracked tab is changed
+  chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
+
+  //get the current tab id in order to execute the following function
+  let tabId = activeInfo.tabId
+
+  function handleTabsDomainChange(tabId, changeInfo, tab) {
+    let currentTabDomain = getDomainFromUrl(tab.url);
+    if (websites[currentTabDomain] === undefined) {
+      handleStopTracking();
+    } else {
+      handleChangedToTrackedDomain(currentTabDomain);
+    }
   };
 }
 

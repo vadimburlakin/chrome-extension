@@ -13,9 +13,10 @@ window.addEventListener('load', function load(event) {
 
     //send current tab url to background script
     function getCurrent(tabs) {
+      console.log(tabs);
       let message = {
         type: 'START_TRACKING',
-        url: tabs[0].url
+        url: tabs[2].url
       }
       chrome.runtime.sendMessage(message);
     };
