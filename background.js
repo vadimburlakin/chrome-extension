@@ -55,7 +55,7 @@ function handleStopTracking() {
 }
 
 //check in case we changed to the tab that is already tracked
-function handleChangedToDomain(domain) {
+function handleChangedToTrackedDomain(domain) {
   if (websites[domain] !== undefined) {
     currentlyTrackedDomain = domain;
     startTracking = new Date();
@@ -66,14 +66,33 @@ chrome.tabs.onActivated.addListener(activeTabChange);
 
 //take actions in case active tab is changed
 function activeTabChange(activeInfo) {
+  //check and take actions in case if changed from tracked tab
   handleStopTracking();
+
 
   chrome.tabs.get(activeInfo.tabId, isCurrentTabTracked);
 
   //if we open a tab which we already track
   function isCurrentTabTracked(tab) {
     const domain = getDomainFromUrl(tab.url);
-    handleChangedToDomain(domain);
+    handleChangedToTrackedDomain(domain);
+
+    //check if the domain within tracked tab is changed
+    chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
+
+    let tabId = tab.id
+
+    function handleTabsDomainChange(tabId, changeInfo, tab) {
+      let currentTabDomain = getDomainFromUrl(tab.url);
+      if (websites[currentTabDomain] === undefined) {
+        handleStopTracking();
+
+        console.log(websites);
+      } else {
+        // handleStartTracking(currentTabDomain);
+      }
+    };
+
 
     console.log(websites);
   };
@@ -98,9 +117,7 @@ function windowChange(windowId) {
     let currentTab = window.tabs.find(tab => tab.active === true);
     const domain = getDomainFromUrl(currentTab.url);
 
-    handleChangedToDomain(domain);
-
-    console.log(window.tabs);
+    handleChangedToTrackedDomain(domain);
     console.log(websites);
   };
 }
