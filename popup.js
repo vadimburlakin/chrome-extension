@@ -2,22 +2,19 @@ window.addEventListener('load', function load(event) {
   //create event listener for Track button
   var createButton = document.getElementById('create_button');
 
+  //trigger the following function each time button is clicked
   createButton.addEventListener('click', function() {
-    let params = {
-      active: true
-    };
-
-    //trigger the following function each time button is clicked
-
-    chrome.tabs.query(params, getCurrent);
+    let queryInfo = {};
+    chrome.tabs.query(queryInfo, getCurrentTab);
 
     //send current tab url to background script
-    function getCurrent(tabs) {
-      console.log(tabs);
+    function getCurrentTab(tab) {
+      let currentTab = tab.find(tab => tab.active === true);
       let message = {
         type: 'START_TRACKING',
-        url: tabs[2].url
+        url: currentTab.url
       }
+      console.log(tab);
       chrome.runtime.sendMessage(message);
     };
   });
