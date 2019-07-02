@@ -1,4 +1,3 @@
-let websites = {};
 let currentlyTrackedDomain = null;
 let startTracking = null;
 
@@ -29,6 +28,7 @@ function getDomainFromUrl(url) {
 
 //execute in case "track" button was clicked
 function handleStartTracking(message) {
+  console.log(message);
   let domain = getDomainFromUrl(message.url);
   currentlyTrackedDomain = domain;
 
@@ -75,7 +75,9 @@ function activeTabChange(activeInfo) {
   function isCurrentTabTracked(tab) {
     const domain = getDomainFromUrl(tab.url);
     handleChangedToTrackedDomain(domain);
-  }
+
+    console.log(websites);
+  };
 
   //check if the domain within the tracked tab is changed
   chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
@@ -113,14 +115,6 @@ function windowChange(windowId) {
     const domain = getDomainFromUrl(currentTab.url);
 
     handleChangedToTrackedDomain(domain);
-  }
+    console.log(websites);
+  };
 }
-
-
-chrome.storage.sync.set({testValue: "hello world"}, function() {
-  console.log("value set success");
-});
-
-chrome.storage.sync.get([testValue], function(result) {
-  console.log(result);
-})
