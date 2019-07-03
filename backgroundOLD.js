@@ -2,10 +2,6 @@ let websites = {};
 let currentlyTrackedDomain = null;
 let startTracking = null;
 
-chrome.storage.sync.set({websites}, function() {
-  console.log("value set success");
-});
-
 //listen for messages from popup
 chrome.runtime.onMessage.addListener(onMessage);
 
@@ -34,22 +30,21 @@ function getDomainFromUrl(url) {
 //execute in case "track" button was clicked
 function handleStartTracking(message) {
   let domain = getDomainFromUrl(message.url);
+  currentlyTrackedDomain = domain;
 
-  chrome.storage.sync.get(websites, function(result) {
-    if (result[domain] === undefined) {
-      currentlyTrackedDomain = domain;
-      startTracking = new Date();
-      websites[domain] = 0;
-      chrome.storage.sync.set(websites, function() {
-        console.log("success");
-        chrome.storage.sync.get(websites, function(result) {
-          console.log(result);
-        });
-      });
-    } else {
-      alert("You are already tracking this website");
-    }
+  chrome.storage.sync.get(domain, function(result) {
+
   });
+
+
+  if (websites[domain] === undefined) {
+    currentlyTrackedDomain = domain;
+    websites[domain] = 0;
+    startTracking = new Date();
+
+  } else {
+    alert("You are already tracking this website");
+  }
 }
 
 //stop tracking in case we changed active tab and count tracking time
@@ -57,26 +52,18 @@ function handleStopTracking() {
   if (currentlyTrackedDomain !== null) {
     let currentTime = new Date();
     websites[currentlyTrackedDomain] += Math.floor((currentTime - startTracking) / 1000);
-    console.log(websites);
-    chrome.storage.sync.set(websites, function() {
-      console.log("set success");
-      chrome.storage.sync.get(websites, function(result) {
-        console.log(result);
-      });
-    });
   };
+
   //don't forget to clear the value
   currentlyTrackedDomain = null;
 }
 
 //check in case we changed to the tab that is already tracked
 function handleChangedToTrackedDomain(domain) {
-  chrome.storage.sync.get(websites, function(result) {
-    if(result[domain] !== undefined) {
-      currentlyTrackedDomain = domain;
-      startTracking = new Date();
-    }
-  });
+  if (websites[domain] !== undefined) {
+    currentlyTrackedDomain = domain;
+    startTracking = new Date();
+  };
 }
 
 chrome.tabs.onActivated.addListener(activeTabChange);
@@ -101,18 +88,13 @@ function activeTabChange(activeInfo) {
   //get the current tab id in order to execute the following function
   let tabId = activeInfo.tabId
 
-  //react to domain change in the tracked tab
   function handleTabsDomainChange(tabId, changeInfo, tab) {
     let currentTabDomain = getDomainFromUrl(tab.url);
-
-    chrome.storage.sync.get(websites, function(result) {
-      if (result[currentTabDomain] === undefined) {
-        handleStopTracking();
-      } else {
-        handleChangedToTrackedDomain(currentTabDomain);
-      }
-    });
-
+    if (websites[currentTabDomain] === undefined) {
+      handleStopTracking();
+    } else {
+      handleChangedToTrackedDomain(currentTabDomain);
+    }
   };
 }
 
@@ -138,3 +120,21 @@ function windowChange(windowId) {
     handleChangedToTrackedDomain(domain);
   }
 }
+
+chrome.storage.sync.set({websites}, function() {
+  console.log("value set success");
+});
+
+let info = "test";
+
+chrome.storage.sync.get(websites, function(result) {
+  if (result[info] === undefined) {
+    websites[info] = 0;
+    chrome.storage.sync.set(websites, function() {
+      console.log("success");
+      chrome.storage.sync.get(websites, function(result) {
+        console.log(result);
+      });
+    });
+  }
+});
