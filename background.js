@@ -39,6 +39,7 @@ function handleStartTracking(message) {
     if (result[domain] === undefined) {
       currentlyTrackedDomain = domain;
       startTracking = new Date();
+      websites = result;
       websites[domain] = 0;
       chrome.storage.sync.set(websites, function() {
         console.log("success");
@@ -55,23 +56,26 @@ function handleStartTracking(message) {
 //stop tracking in case we changed active tab and count tracking time
 function handleStopTracking() {
   if (currentlyTrackedDomain !== null) {
-    let currentTime = new Date();
-    websites[currentlyTrackedDomain] += Math.floor((currentTime - startTracking) / 1000);
-    console.log(websites);
-    chrome.storage.sync.set(websites, function() {
-      console.log("set success");
-      chrome.storage.sync.get(websites, function(result) {
-        console.log(result);
+    chrome.storage.sync.get(websites, function(result) {
+      websites = result;
+      let totalTime = Math.floor((new Date() - startTracking) / 1000);
+      websites[currentlyTrackedDomain] += totalTime;
+      //don't forget to clear the value
+      currentlyTrackedDomain = null;
+      chrome.storage.sync.set(websites, function() {
+        console.log("set success");
+        chrome.storage.sync.get(websites, function(result) {
+          console.log(result);
+        });
       });
     });
   };
-  //don't forget to clear the value
-  currentlyTrackedDomain = null;
 }
 
 //check in case we changed to the tab that is already tracked
 function handleChangedToTrackedDomain(domain) {
   chrome.storage.sync.get(websites, function(result) {
+    console.log(result)
     if(result[domain] !== undefined) {
       currentlyTrackedDomain = domain;
       startTracking = new Date();
