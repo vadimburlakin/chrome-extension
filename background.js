@@ -1,10 +1,4 @@
-let websites = {};
-let currentlyTrackedDomain = null;
-let startTracking = null;
-
-chrome.storage.sync.set({websites}, function() {
-  console.log("object sent successfully");
-});
+// Handling Messages From Popup
 
 //listen for messages from popup
 chrome.runtime.onMessage.addListener(onMessage);
@@ -17,8 +11,25 @@ function onMessage(message, sender, sendResponse) {
         handleStartTracking(message);
         break;
       }
+    case 'GET_TRACKING_DATA':
+    {
+      handleShowTrackingData().then(sendResponse);
+      return true;
+      break;
+    }
   }
 }
+
+//Handling Tracking Websites
+
+let websites = {};
+let currentlyTrackedDomain = null;
+let startTracking = null;
+
+chrome.storage.sync.set({websites}, function() {
+  console.log("object sent successfully");
+});
+
 
 //get the domain from URL
 function getDomainFromUrl(url) {
@@ -138,4 +149,10 @@ function windowChange(windowId) {
 
     handleChangedToTrackedDomain(domain);
   }
+}
+
+//Showing Tracking Data
+
+async function handleShowTrackingData() {
+  return await getDataFromStorage(websites);
 }
