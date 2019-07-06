@@ -9,12 +9,11 @@ window.addEventListener('load', function load(event) {
 
     //send current tab url to background script
     function getCurrentTab(tab) {
-      let currentTab = tab.find(tab => tab.active === true);
+      let currentTab = tab.find(tab => tab.active === true && !tab.url.includes("google.com"));
       let message = {
         type: 'START_TRACKING',
         url: currentTab.url
       }
-      console.log(tab);
       chrome.runtime.sendMessage(message);
     };
   });

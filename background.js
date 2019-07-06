@@ -3,7 +3,7 @@ let currentlyTrackedDomain = null;
 let startTracking = null;
 
 chrome.storage.sync.set({websites}, function() {
-  console.log("value set success");
+  console.log("object sent successfully");
 });
 
 //listen for messages from popup
@@ -18,8 +18,7 @@ function onMessage(message, sender, sendResponse) {
         break;
       }
   }
-
-};
+}
 
 //get the domain from URL
 function getDomainFromUrl(url) {
@@ -31,56 +30,57 @@ function getDomainFromUrl(url) {
   }
 }
 
-//execute in case "track" button was clicked
-function handleStartTracking(message) {
-  let domain = getDomainFromUrl(message.url);
-
-  chrome.storage.sync.get(websites, function(result) {
-    if (result[domain] === undefined) {
-      currentlyTrackedDomain = domain;
-      startTracking = new Date();
-      websites = result;
-      websites[domain] = 0;
-      chrome.storage.sync.set(websites, function() {
-        console.log("success");
-        chrome.storage.sync.get(websites, function(result) {
-          console.log(result);
-        });
-      });
-    } else {
-      alert("You are already tracking this website");
-    }
+//promisified function to send data to chrome storage
+function sendDataToStorage(data) {
+  return new Promise(resolve => {
+    chrome.storage.sync.set(data, function() {
+      resolve("data was uploaded successfully");
+    });
   });
 }
 
-//stop tracking in case we changed active tab and count tracking time
-function handleStopTracking() {
-  if (currentlyTrackedDomain !== null) {
-    chrome.storage.sync.get(websites, function(result) {
-      websites = result;
-      let totalTime = Math.floor((new Date() - startTracking) / 1000);
-      websites[currentlyTrackedDomain] += totalTime;
-      //don't forget to clear the value
-      currentlyTrackedDomain = null;
-      chrome.storage.sync.set(websites, function() {
-        console.log("set success");
-        chrome.storage.sync.get(websites, function(result) {
-          console.log(result);
-        });
-      });
+//promisified function to get data from chrome storage
+function getDataFromStorage(data) {
+  return new Promise(resolve => {
+    chrome.storage.sync.get(data, function(result) {
+      resolve(result);
     });
+  });
+}
+
+//execute in case "track" button was clicked
+async function handleStartTracking(message) {
+  let domain = getDomainFromUrl(message.url);
+
+  websites = await getDataFromStorage(websites);
+  if (websites[domain] === undefined) {
+    currentlyTrackedDomain = domain;
+    startTracking = new Date();
+    websites[domain] = 0;
+    await sendDataToStorage(websites);
+  } else {
+    alert("You are already tracking this website");
+  }
+}
+
+//stop tracking in case we changed active tab and count tracking time
+async function handleStopTracking() {
+  if (currentlyTrackedDomain !== null) {
+    websites = await getDataFromStorage(websites);
+    websites[currentlyTrackedDomain] += Math.floor((new Date() - startTracking) / 1000);
+    //don't forget to clear the value
+    currentlyTrackedDomain = null;
+    await sendDataToStorage(websites);
   };
 }
 
 //check in case we changed to the tab that is already tracked
-function handleChangedToTrackedDomain(domain) {
-  chrome.storage.sync.get(websites, function(result) {
-    console.log(result)
-    if(result[domain] !== undefined) {
-      currentlyTrackedDomain = domain;
-      startTracking = new Date();
-    }
-  });
+async function handleChangedToTrackedDomain(domain) {
+  websites = await getDataFromStorage(websites);
+  if (websites[domain] !== undefined) {
+    currentlyTrackedDomain = domain;
+    startTracking = new Date();
+  };
 }
 
 chrome.tabs.onActivated.addListener(activeTabChange);
@@ -89,7 +89,6 @@ chrome.tabs.onActivated.addListener(activeTabChange);
 function activeTabChange(activeInfo) {
   //check and take actions in case if changed from tracked tab
   handleStopTracking();
-
 
   chrome.tabs.get(activeInfo.tabId, isCurrentTabTracked);
 
@@ -106,17 +105,15 @@ function activeTabChange(activeInfo) {
   let tabId = activeInfo.tabId
 
   //react to domain change in the tracked tab
-  function handleTabsDomainChange(tabId, changeInfo, tab) {
+async function handleTabsDomainChange(tabId, changeInfo, tab) {
     let currentTabDomain = getDomainFromUrl(tab.url);
 
-    chrome.storage.sync.get(websites, function(result) {
-      if (result[currentTabDomain] === undefined) {
-        handleStopTracking();
-      } else {
-        handleChangedToTrackedDomain(currentTabDomain);
-      }
-    });
-
+    websites = await getDataFromStorage(websites);
+    if (websites[currentTabDomain] === undefined) {
+      handleStopTracking();
+    } else {
+      handleChangedToTrackedDomain(currentTabDomain);
+    }
   };
 }
 
