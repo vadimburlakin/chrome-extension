@@ -1,15 +1,30 @@
 <html>
+
 <head>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <!-- Google Fonts -->
+  <link rel="stylesheet"
+  href="https://fonts.googleapis.com/css?family=Poppins" type="text/css">
   <link rel="stylesheet" href="style.css">
   <script src="popup.js" charset="utf-8"></script>
 </head>
-  <body>
-    <button id="track_button" class="popupButton" type="button">
-      Track
-    </button>
-    <h1></h1>
-    <button id="show_data" class="popupButton" type="button">
-      Show Data
-    </button>
-  </body>
+
+<body>
+  <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+    <h4>The Argus</h4>
+    <p class="card-text">Shows you the websites you're on the most</p>
+  </div>
+  <div class="container">
+    <div class="card-deck mb-3 text-center">
+      <p>
+        <button id="track_button" type="button" class="btn btn-primary my-2">Track Data</button>
+        <button id="show_data" type="button" class="btn btn-success my-2">Show Data</button>
+      </p>
+    </div>
+    <div id="tracking_data"></div>
+  </div>
+
+</body>
+
 </html>
