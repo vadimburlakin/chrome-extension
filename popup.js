@@ -1,9 +1,9 @@
 window.addEventListener('load', function load(event) {
-  //create event listener for Track button
-  var createButton = document.getElementById('create_button');
+  //event listener for Track button
+  var trackButton = document.getElementById('track_button');
 
   //trigger the following function each time button is clicked
-  createButton.addEventListener('click', function() {
+  trackButton.addEventListener('click', function() {
     let queryInfo = {};
     chrome.tabs.query(queryInfo, getCurrentTab);
 
@@ -16,5 +16,24 @@ window.addEventListener('load', function load(event) {
       }
       chrome.runtime.sendMessage(message);
     };
+  });
+
+  //event listener for Show Data button
+  var showDataButton = document.getElementById("show_data");
+
+  //trigger the following function each time button is clicked
+  showDataButton.addEventListener('click', function() {
+    let message = {
+      type: 'GET_TRACKING_DATA'
+    };
+
+    chrome.runtime.sendMessage(message, responseCallback);
+
+    function responseCallback(response) {
+      response = JSON.stringify(response);
+      let div = document.getElementById('tracking_data');
+      div.insertAdjacentHTML('afterend', `<p>${response}</p>`);
+      console.log(response);
+    }
   });
 });
