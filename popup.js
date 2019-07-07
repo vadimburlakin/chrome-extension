@@ -1,13 +1,13 @@
 const COLORS = [
-  '#4dc9f6',
-  '#f67019',
-  '#f53794',
-  '#537bc4',
-  '#acc236',
-  '#166a8f',
-  '#00a950',
-  '#58595b',
-  '#8549ba'
+  "#4dc9f6",
+  "#f67019",
+  "#f53794",
+  "#537bc4",
+  "#acc236",
+  "#166a8f",
+  "#00a950",
+  "#58595b",
+  "#8549ba"
 ];
 
 let data = {
@@ -18,15 +18,15 @@ let data = {
   }]
 };
 
-var ctx = document.getElementById('myChart');
+var ctx = document.getElementById("myChart");
 var chart = null;
 
-window.addEventListener('load', function load(event) {
+window.addEventListener("load", function load(event) {
   //event listener for Track button
-  var trackButton = document.getElementById('track_button');
+  var trackButton = document.getElementById("track_button");
 
   //trigger the following function each time button is clicked
-  trackButton.addEventListener('click', function() {
+  trackButton.addEventListener("click", function() {
     let queryInfo = {};
     chrome.tabs.query(queryInfo, getCurrentTab);
 
@@ -34,15 +34,15 @@ window.addEventListener('load', function load(event) {
     function getCurrentTab(tab) {
       let currentTab = tab.find(tab => tab.active === true && !tab.url.includes("google.com"));
       let message = {
-        type: 'START_TRACKING',
+        type: "START_TRACKING",
         url: currentTab.url
-      }
+      };
       chrome.runtime.sendMessage(message);
-    };
+    }
   });
 
   let message = {
-    type: 'GET_TRACKING_DATA'
+    type: "GET_TRACKING_DATA"
   };
 
   chrome.runtime.sendMessage(message, responseCallback);
@@ -55,21 +55,21 @@ window.addEventListener('load', function load(event) {
       data.datasets[0].data.push(webData[1]);
     });
     chart = new Chart(ctx, {
-      type: 'pie',
+      type: "pie",
       data: data
     });
-  };
+  }
 
   //event listener for Clear button
-  var clearButton = document.getElementById('clear_data');
+  var clearButton = document.getElementById("clear_data");
 
   //trigger the following function each time button is clicked
-  clearButton.addEventListener('click', function() {
-      let message =     {
-        type: 'CLEAR_TRACKING_DATA'
-      };
-      chrome.runtime.sendMessage(message);
-      chart.destroy();
+  clearButton.addEventListener("click", function() {
+    let message =     {
+      type: "CLEAR_TRACKING_DATA"
+    };
+    chrome.runtime.sendMessage(message);
+    chart.destroy();
   });
 
 });

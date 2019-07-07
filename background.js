@@ -6,21 +6,21 @@ chrome.runtime.onMessage.addListener(onMessage);
 //depending on message type decide what action to take
 function onMessage(message, sender, sendResponse) {
   switch (message.type) {
-    case 'START_TRACKING':
-      {
-        handleStartTracking(message);
-        break;
-      }
-    case 'GET_TRACKING_DATA':
-      {
-        handleShowTrackingData().then(sendResponse);
-        return true;
-        break;
-      }
-    case 'CLEAR_TRACKING_DATA':
-     {
-       handleClearData();
-     }
+  case "START_TRACKING":
+  {
+    handleStartTracking(message);
+    break;
+  }
+  case "GET_TRACKING_DATA":
+  {
+    handleShowTrackingData().then(sendResponse);
+    return true;
+    break;
+  }
+  case "CLEAR_TRACKING_DATA":
+  {
+    handleClearData();
+  }
   }
 }
 
@@ -88,7 +88,7 @@ async function handleStopTracking() {
     //don't forget to clear the value
     currentlyTrackedDomain = null;
     await sendDataToStorage(websites);
-  };
+  }
 }
 
 //check in case we changed to the tab that is already tracked
@@ -97,7 +97,7 @@ async function handleChangedToTrackedDomain(domain) {
   if (websites[domain] !== undefined) {
     currentlyTrackedDomain = domain;
     startTracking = new Date();
-  };
+  }
 }
 
 chrome.tabs.onActivated.addListener(activeTabChange);
@@ -119,7 +119,7 @@ function activeTabChange(activeInfo) {
   chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
 
   //get the current tab id in order to execute the following function
-  let tabId = activeInfo.tabId
+  let tabId = activeInfo.tabId;
 
   //react to domain change in the tracked tab
   async function handleTabsDomainChange(tabId, changeInfo, tab) {
@@ -131,7 +131,7 @@ function activeTabChange(activeInfo) {
     } else {
       handleChangedToTrackedDomain(currentTabDomain);
     }
-  };
+  }
 }
 
 //listen in case the tab we are tracking is opened in another window
@@ -143,7 +143,7 @@ function windowChange(windowId) {
   //necessary parameter to get access to tabs
   let getInfo = {
     populate: true
-  }
+  };
 
   //check the current tab in currently active window
   chrome.windows.getCurrent(getInfo, getCurrentTab);
@@ -168,4 +168,4 @@ async function handleShowTrackingData() {
 async function handleClearData() {
   websites = {};
   await sendDataToStorage(websites);
-};
+}
