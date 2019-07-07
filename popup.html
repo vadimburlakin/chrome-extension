@@ -7,7 +7,6 @@
   <link rel="stylesheet"
   href="https://fonts.googleapis.com/css?family=Poppins" type="text/css">
   <link rel="stylesheet" href="style.css">
-  <script src="popup.js" charset="utf-8"></script>
 </head>
 
 <body>
@@ -19,12 +18,14 @@
     <div class="card-deck mb-3 text-center">
       <p>
         <button id="track_button" type="button" class="btn btn-primary my-2">Track Data</button>
-        <button id="show_data" type="button" class="btn btn-success my-2">Show Data</button>
+        <button id="clear_data" type="button" class="btn btn-success my-2">Clear</button>
       </p>
     </div>
-    <div id="tracking_data"></div>
+    <canvas id="myChart"></canvas>
   </div>
 
 </body>
-
+<!--Chartjs -->
+<script src="chart.min.js"></script>
+<script src="popup.js" charset="utf-8"></script>
 </html>

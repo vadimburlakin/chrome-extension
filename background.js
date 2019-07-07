@@ -12,11 +12,15 @@ function onMessage(message, sender, sendResponse) {
         break;
       }
     case 'GET_TRACKING_DATA':
-    {
-      handleShowTrackingData().then(sendResponse);
-      return true;
-      break;
-    }
+      {
+        handleShowTrackingData().then(sendResponse);
+        return true;
+        break;
+      }
+    case 'CLEAR_TRACKING_DATA':
+     {
+       handleClearData();
+     }
   }
 }
 
@@ -26,7 +30,9 @@ let websites = {};
 let currentlyTrackedDomain = null;
 let startTracking = null;
 
-chrome.storage.sync.set({websites}, function() {
+chrome.storage.sync.set({
+  websites
+}, function() {
   console.log("object sent successfully");
 });
 
@@ -116,7 +122,7 @@ function activeTabChange(activeInfo) {
   let tabId = activeInfo.tabId
 
   //react to domain change in the tracked tab
-async function handleTabsDomainChange(tabId, changeInfo, tab) {
+  async function handleTabsDomainChange(tabId, changeInfo, tab) {
     let currentTabDomain = getDomainFromUrl(tab.url);
 
     websites = await getDataFromStorage(websites);
@@ -156,3 +162,10 @@ function windowChange(windowId) {
 async function handleShowTrackingData() {
   return await getDataFromStorage(websites);
 }
+
+//Clear data when Clear button is clicked
+
+async function handleClearData() {
+  websites = {};
+  await sendDataToStorage(websites);
+};
