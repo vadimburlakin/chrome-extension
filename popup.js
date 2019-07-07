@@ -1,3 +1,26 @@
+const COLORS = [
+  '#4dc9f6',
+  '#f67019',
+  '#f53794',
+  '#537bc4',
+  '#acc236',
+  '#166a8f',
+  '#00a950',
+  '#58595b',
+  '#8549ba'
+];
+
+let data = {
+  labels: [],
+  datasets: [{
+    backgroundColor: [],
+    data: []
+  }]
+};
+
+var ctx = document.getElementById('myChart');
+
+
 window.addEventListener('load', function load(event) {
   //event listener for Track button
   var trackButton = document.getElementById('track_button');
@@ -18,22 +41,22 @@ window.addEventListener('load', function load(event) {
     };
   });
 
-  //event listener for Show Data button
-  var showDataButton = document.getElementById("show_data");
+  let message = {
+    type: 'GET_TRACKING_DATA'
+  };
 
-  //trigger the following function each time button is clicked
-  showDataButton.addEventListener('click', function() {
-    let message = {
-      type: 'GET_TRACKING_DATA'
-    };
+  chrome.runtime.sendMessage(message, responseCallback);
 
-    chrome.runtime.sendMessage(message, responseCallback);
-
-    function responseCallback(response) {
-      response = JSON.stringify(response);
-      let div = document.getElementById('tracking_data');
-      div.insertAdjacentHTML('afterend', `<p>${response}</p>`);
-      console.log(response);
-    }
-  });
+  function responseCallback(response) {
+    response = Object.entries(response);
+    response.forEach((webData, i) => {
+      data.labels.push(webData[0]);
+      data.datasets[0].backgroundColor.push(COLORS[i]);
+      data.datasets[0].data.push(webData[1]);
+    });
+    new Chart(ctx, {
+      type: 'pie',
+      data: data
+    });
+  };
 });
