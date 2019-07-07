@@ -17,6 +17,10 @@ function onMessage(message, sender, sendResponse) {
         return true;
         break;
       }
+    case 'CLEAR_TRACKING_DATA':
+     {
+       handleClearData();
+     }
   }
 }
 
@@ -158,3 +162,10 @@ function windowChange(windowId) {
 async function handleShowTrackingData() {
   return await getDataFromStorage(websites);
 }
+
+//Clear data when Clear button is clicked
+
+async function handleClearData() {
+  websites = {};
+  await sendDataToStorage(websites);
+};

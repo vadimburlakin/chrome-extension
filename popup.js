@@ -19,7 +19,7 @@ let data = {
 };
 
 var ctx = document.getElementById('myChart');
-
+var chart = null;
 
 window.addEventListener('load', function load(event) {
   //event listener for Track button
@@ -54,9 +54,22 @@ window.addEventListener('load', function load(event) {
       data.datasets[0].backgroundColor.push(COLORS[i]);
       data.datasets[0].data.push(webData[1]);
     });
-    new Chart(ctx, {
+    chart = new Chart(ctx, {
       type: 'pie',
       data: data
     });
   };
+
+  //event listener for Clear button
+  var clearButton = document.getElementById('clear_data');
+
+  //trigger the following function each time button is clicked
+  clearButton.addEventListener('click', function() {
+      let message =     {
+        type: 'CLEAR_TRACKING_DATA'
+      };
+      chrome.runtime.sendMessage(message);
+      chart.destroy();
+  });
+
 });
