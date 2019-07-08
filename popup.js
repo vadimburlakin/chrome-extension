@@ -66,7 +66,7 @@ window.addEventListener("load", function load(event) {
 
   //trigger the following function each time button is clicked
   clearButton.addEventListener("click", function() {
-    let message =     {
+    let message = {
       type: "CLEAR_TRACKING_DATA"
     };
     chrome.runtime.sendMessage(message);
