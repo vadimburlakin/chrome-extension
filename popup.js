@@ -27,12 +27,15 @@ window.addEventListener("load", function load(event) {
 
   //trigger the following function each time button is clicked
   trackButton.addEventListener("click", function() {
-    let queryInfo = {};
-    chrome.tabs.query(queryInfo, getCurrentTab);
+    let getInfo = {
+      populate: true
+    };
 
-    //send current tab url to background script
-    function getCurrentTab(tab) {
-      let currentTab = tab.find(tab => tab.active === true && !tab.url.includes("google.com"));
+    chrome.windows.getCurrent(getInfo, getCurrentTab);
+
+    function getCurrentTab(window) {
+      //check and take actions if we changed to tab we don't track
+      let currentTab = window.tabs.find(tab => tab.active === true);
       let message = {
         type: "START_TRACKING",
         url: currentTab.url,
