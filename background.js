@@ -1,6 +1,5 @@
-// Handling Messages From Popup
-
-//listen for messages from popup
+/* Handling Messages From Popup */
+//listen for messages from popup.js
 chrome.runtime.onMessage.addListener(onMessage);
 
 //depending on message type decide what action to take
@@ -23,9 +22,9 @@ function onMessage(message, sender, sendResponse) {
       }
   }
 }
+/* END Handling Messages From Popup */
 
-//Handling Tracking Websites
-
+/* Necessary Variables Declaration */
 let websites = {};
 let currentlyTrackedDomain = {
   domain: null,
@@ -33,13 +32,16 @@ let currentlyTrackedDomain = {
 };
 let startTracking = null;
 
+//sending empty websites object to storage for set up
 chrome.storage.sync.set({
   websites
 }, function() {
   console.log("object sent successfully");
 });
 
+/* END Necessary Variables Declaration */
 
+/* Functions for Argus Chrome Extension */
 //get the domain from URL
 function getDomainFromUrl(url) {
   if (url.includes("chrome://")) {
@@ -102,6 +104,20 @@ async function handleChangedToTrackedDomain(domain) {
   }
 }
 
+//Show Tracking Data
+async function handleShowTrackingData() {
+  return await getDataFromStorage(websites);
+}
+
+//Clear data when Clear button is clicked
+async function handleClearData() {
+  websites = {};
+  await sendDataToStorage(websites);
+}
+/* END Functions for Argus Chrome Extension */
+
+
+/* Argus Implementation */
 chrome.tabs.onActivated.addListener(activeTabChange);
 
 //take actions in case active tab is changed
@@ -159,16 +175,4 @@ function windowChange(windowId) {
     handleChangedToTrackedDomain(domain);
   }
 }
-
-//Showing Tracking Data
-
-async function handleShowTrackingData() {
-  return await getDataFromStorage(websites);
-}
-
-//Clear data when Clear button is clicked
-
-async function handleClearData() {
-  websites = {};
-  await sendDataToStorage(websites);
-}
+/* END Argus Implementation */
