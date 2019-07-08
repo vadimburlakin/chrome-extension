@@ -1,48 +1,52 @@
-// Handling Messages From Popup
-
-//listen for messages from popup
+/* Handling Messages From Popup */
+//listen for messages from popup.js
 chrome.runtime.onMessage.addListener(onMessage);
 
 //depending on message type decide what action to take
 function onMessage(message, sender, sendResponse) {
   switch (message.type) {
-    case 'START_TRACKING':
-      {
-        handleStartTracking(message);
-        break;
-      }
-    case 'GET_TRACKING_DATA':
-      {
-        handleShowTrackingData().then(sendResponse);
-        return true;
-        break;
-      }
-    case 'CLEAR_TRACKING_DATA':
-     {
-       handleClearData();
-     }
+  case "START_TRACKING":
+  {
+    handleStartTracking(message);
+    break;
+  }
+  case "GET_TRACKING_DATA":
+  {
+    handleShowTrackingData().then(sendResponse);
+    return true;
+  }
+  case "CLEAR_TRACKING_DATA":
+  {
+    handleClearData();
+  }
   }
 }
+/* END Handling Messages From Popup */
 
-//Handling Tracking Websites
-
+/* Necessary Variables Declaration */
 let websites = {};
-let currentlyTrackedDomain = null;
+let currentlyTrackedDomain = {
+  domain: null,
+  windowId: null
+};
 let startTracking = null;
 
+//sending empty websites object to storage for set up
 chrome.storage.sync.set({
   websites
 }, function() {
   console.log("object sent successfully");
 });
 
+/* END Necessary Variables Declaration */
 
+/* Functions for Argus Chrome Extension */
 //get the domain from URL
 function getDomainFromUrl(url) {
   if (url.includes("chrome://")) {
     return url;
   } else {
-    const matches = url.match(/^(https?:\/\/[^\/]+)/);
+    const matches = url.match(/^(https?:\/\/[^/]+)/);
     return matches[1];
   }
 }
@@ -69,10 +73,14 @@ function getDataFromStorage(data) {
 async function handleStartTracking(message) {
   let domain = getDomainFromUrl(message.url);
 
+  /* eslint-disable-next-line require-atomic-updates */
   websites = await getDataFromStorage(websites);
+  /* eslint-disable-next-line require-atomic-updates */
   if (websites[domain] === undefined) {
-    currentlyTrackedDomain = domain;
+    currentlyTrackedDomain.domain = domain;
+    currentlyTrackedDomain.windowId = message.windowId;
     startTracking = new Date();
+    /* eslint-disable-next-line require-atomic-updates */
     websites[domain] = 0;
     await sendDataToStorage(websites);
   } else {
@@ -82,30 +90,47 @@ async function handleStartTracking(message) {
 
 //stop tracking in case we changed active tab and count tracking time
 async function handleStopTracking() {
-  if (currentlyTrackedDomain !== null) {
-    websites = await getDataFromStorage(websites);
-    websites[currentlyTrackedDomain] += Math.floor((new Date() - startTracking) / 1000);
-    //don't forget to clear the value
-    currentlyTrackedDomain = null;
-    await sendDataToStorage(websites);
-  };
+  /* eslint-disable-next-line require-atomic-updates */
+  websites = await getDataFromStorage(websites);
+  /* eslint-disable-next-line require-atomic-updates */
+  websites[currentlyTrackedDomain.domain] += Math.floor((new Date() - startTracking) / 1000);
+  //don't forget to clear the value
+  currentlyTrackedDomain.domain = null;
+  await sendDataToStorage(websites);
 }
 
 //check in case we changed to the tab that is already tracked
 async function handleChangedToTrackedDomain(domain) {
+  /* eslint-disable-next-line require-atomic-updates */
   websites = await getDataFromStorage(websites);
   if (websites[domain] !== undefined) {
-    currentlyTrackedDomain = domain;
+    currentlyTrackedDomain.domain = domain;
     startTracking = new Date();
-  };
+  }
 }
 
+//Show Tracking Data
+async function handleShowTrackingData() {
+  return await getDataFromStorage(websites);
+}
+
+//Clear data when Clear button is clicked
+async function handleClearData() {
+  websites = {};
+  await sendDataToStorage(websites);
+}
+/* END Functions for Argus Chrome Extension */
+
+
+/* Argus Implementation */
 chrome.tabs.onActivated.addListener(activeTabChange);
 
 //take actions in case active tab is changed
 function activeTabChange(activeInfo) {
   //check and take actions in case if changed from tracked tab
-  handleStopTracking();
+  if (currentlyTrackedDomain.domain !== null && currentlyTrackedDomain.windowId === activeInfo.windowId) {
+    handleStopTracking();
+  }
 
   chrome.tabs.get(activeInfo.tabId, isCurrentTabTracked);
 
@@ -114,36 +139,35 @@ function activeTabChange(activeInfo) {
     const domain = getDomainFromUrl(tab.url);
     handleChangedToTrackedDomain(domain);
   }
+}
 
-  //check if the domain within the tracked tab is changed
-  chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
+//check if the domain within the tracked tab is changed
+chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
 
-  //get the current tab id in order to execute the following function
-  let tabId = activeInfo.tabId
-
-  //react to domain change in the tracked tab
-  async function handleTabsDomainChange(tabId, changeInfo, tab) {
-    let currentTabDomain = getDomainFromUrl(tab.url);
-
-    websites = await getDataFromStorage(websites);
-    if (websites[currentTabDomain] === undefined) {
-      handleStopTracking();
-    } else {
-      handleChangedToTrackedDomain(currentTabDomain);
-    }
-  };
+//react to domain change in the tracked tab
+async function handleTabsDomainChange(tabId, changeInfo, tab) {
+  let currentTabDomain = getDomainFromUrl(tab.url);
+  /* eslint-disable-next-line require-atomic-updates */
+  websites = await getDataFromStorage(websites);
+  if (currentlyTrackedDomain.domain !== null && websites[currentTabDomain] === undefined) {
+    handleStopTracking();
+  } else {
+    handleChangedToTrackedDomain(currentTabDomain);
+  }
 }
 
 //listen in case the tab we are tracking is opened in another window
 chrome.windows.onFocusChanged.addListener(windowChange);
-
+/* eslint-disable-next-line no-unused-vars */
 function windowChange(windowId) {
-  handleStopTracking();
+  if (currentlyTrackedDomain.domain !== null) {
+    handleStopTracking();
+  }
 
   //necessary parameter to get access to tabs
   let getInfo = {
     populate: true
-  }
+  };
 
   //check the current tab in currently active window
   chrome.windows.getCurrent(getInfo, getCurrentTab);
@@ -156,16 +180,4 @@ function windowChange(windowId) {
     handleChangedToTrackedDomain(domain);
   }
 }
-
-//Showing Tracking Data
-
-async function handleShowTrackingData() {
-  return await getDataFromStorage(websites);
-}
-
-//Clear data when Clear button is clicked
-
-async function handleClearData() {
-  websites = {};
-  await sendDataToStorage(websites);
-};
+/* END Argus Implementation */
