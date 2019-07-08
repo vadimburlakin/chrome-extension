@@ -6,28 +6,31 @@ chrome.runtime.onMessage.addListener(onMessage);
 //depending on message type decide what action to take
 function onMessage(message, sender, sendResponse) {
   switch (message.type) {
-  case "START_TRACKING":
-  {
-    handleStartTracking(message);
-    break;
-  }
-  case "GET_TRACKING_DATA":
-  {
-    handleShowTrackingData().then(sendResponse);
-    return true;
-    break;
-  }
-  case "CLEAR_TRACKING_DATA":
-  {
-    handleClearData();
-  }
+    case "START_TRACKING":
+      {
+        handleStartTracking(message);
+        break;
+      }
+    case "GET_TRACKING_DATA":
+      {
+        handleShowTrackingData().then(sendResponse);
+        return true;
+        break;
+      }
+    case "CLEAR_TRACKING_DATA":
+      {
+        handleClearData();
+      }
   }
 }
 
 //Handling Tracking Websites
 
 let websites = {};
-let currentlyTrackedDomain = {domain: null, windowId: null};
+let currentlyTrackedDomain = {
+  domain: null,
+  windowId: null
+};
 let startTracking = null;
 
 chrome.storage.sync.set({
@@ -83,13 +86,11 @@ async function handleStartTracking(message) {
 
 //stop tracking in case we changed active tab and count tracking time
 async function handleStopTracking() {
-  if (currentlyTrackedDomain.domain !== null) {
-    websites = await getDataFromStorage(websites);
-    websites[currentlyTrackedDomain.domain] += Math.floor((new Date() - startTracking) / 1000);
-    //don't forget to clear the value
-    currentlyTrackedDomain.domain = null;
-    await sendDataToStorage(websites);
-  }
+  websites = await getDataFromStorage(websites);
+  websites[currentlyTrackedDomain.domain] += Math.floor((new Date() - startTracking) / 1000);
+  //don't forget to clear the value
+  currentlyTrackedDomain.domain = null;
+  await sendDataToStorage(websites);
 }
 
 //check in case we changed to the tab that is already tracked
@@ -106,8 +107,8 @@ chrome.tabs.onActivated.addListener(activeTabChange);
 //take actions in case active tab is changed
 function activeTabChange(activeInfo) {
   //check and take actions in case if changed from tracked tab
-  if (currentlyTrackedDomain.windowId === activeInfo.windowId) {
-      handleStopTracking();
+  if (currentlyTrackedDomain.domain !== null && currentlyTrackedDomain.windowId === activeInfo.windowId) {
+    handleStopTracking();
   }
 
   chrome.tabs.get(activeInfo.tabId, isCurrentTabTracked);
@@ -127,7 +128,7 @@ async function handleTabsDomainChange(tabId, changeInfo, tab) {
   let currentTabDomain = getDomainFromUrl(tab.url);
 
   websites = await getDataFromStorage(websites);
-  if (websites[currentTabDomain] === undefined) {
+  if (currentlyTrackedDomain.domain !== null && websites[currentTabDomain] === undefined) {
     handleStopTracking();
   } else {
     handleChangedToTrackedDomain(currentTabDomain);
@@ -138,7 +139,9 @@ async function handleTabsDomainChange(tabId, changeInfo, tab) {
 chrome.windows.onFocusChanged.addListener(windowChange);
 
 function windowChange(windowId) {
-  handleStopTracking();
+  if (currentlyTrackedDomain.domain !== null) {
+    handleStopTracking();
+  }
 
   //necessary parameter to get access to tabs
   let getInfo = {
