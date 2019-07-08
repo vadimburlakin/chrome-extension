@@ -35,7 +35,8 @@ window.addEventListener("load", function load(event) {
       let currentTab = tab.find(tab => tab.active === true && !tab.url.includes("google.com"));
       let message = {
         type: "START_TRACKING",
-        url: currentTab.url
+        url: currentTab.url,
+        windowId: currentTab.windowId
       };
       chrome.runtime.sendMessage(message);
     }

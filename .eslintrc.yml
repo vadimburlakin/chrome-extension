@@ -5,6 +5,7 @@ env:
   webextensions: true
 extends: 'eslint:recommended'
 globals:
+  Chart: true
   chrome: true
   Atomics: readonly
   SharedArrayBuffer: readonly

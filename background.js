@@ -27,7 +27,7 @@ function onMessage(message, sender, sendResponse) {
 //Handling Tracking Websites
 
 let websites = {};
-let currentlyTrackedDomain = null;
+let currentlyTrackedDomain = {domain: null, windowId: null};
 let startTracking = null;
 
 chrome.storage.sync.set({
@@ -71,7 +71,8 @@ async function handleStartTracking(message) {
 
   websites = await getDataFromStorage(websites);
   if (websites[domain] === undefined) {
-    currentlyTrackedDomain = domain;
+    currentlyTrackedDomain.domain = domain;
+    currentlyTrackedDomain.windowId = message.windowId;
     startTracking = new Date();
     websites[domain] = 0;
     await sendDataToStorage(websites);
@@ -82,11 +83,11 @@ async function handleStartTracking(message) {
 
 //stop tracking in case we changed active tab and count tracking time
 async function handleStopTracking() {
-  if (currentlyTrackedDomain !== null) {
+  if (currentlyTrackedDomain.domain !== null) {
     websites = await getDataFromStorage(websites);
-    websites[currentlyTrackedDomain] += Math.floor((new Date() - startTracking) / 1000);
+    websites[currentlyTrackedDomain.domain] += Math.floor((new Date() - startTracking) / 1000);
     //don't forget to clear the value
-    currentlyTrackedDomain = null;
+    currentlyTrackedDomain.domain = null;
     await sendDataToStorage(websites);
   }
 }
@@ -95,7 +96,7 @@ async function handleStopTracking() {
 async function handleChangedToTrackedDomain(domain) {
   websites = await getDataFromStorage(websites);
   if (websites[domain] !== undefined) {
-    currentlyTrackedDomain = domain;
+    currentlyTrackedDomain.domain = domain;
     startTracking = new Date();
   }
 }
@@ -105,7 +106,9 @@ chrome.tabs.onActivated.addListener(activeTabChange);
 //take actions in case active tab is changed
 function activeTabChange(activeInfo) {
   //check and take actions in case if changed from tracked tab
-  handleStopTracking();
+  if (currentlyTrackedDomain.windowId === activeInfo.windowId) {
+      handleStopTracking();
+  }
 
   chrome.tabs.get(activeInfo.tabId, isCurrentTabTracked);
 
@@ -114,23 +117,20 @@ function activeTabChange(activeInfo) {
     const domain = getDomainFromUrl(tab.url);
     handleChangedToTrackedDomain(domain);
   }
+}
 
-  //check if the domain within the tracked tab is changed
-  chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
+//check if the domain within the tracked tab is changed
+chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
 
-  //get the current tab id in order to execute the following function
-  let tabId = activeInfo.tabId;
+//react to domain change in the tracked tab
+async function handleTabsDomainChange(tabId, changeInfo, tab) {
+  let currentTabDomain = getDomainFromUrl(tab.url);
 
-  //react to domain change in the tracked tab
-  async function handleTabsDomainChange(tabId, changeInfo, tab) {
-    let currentTabDomain = getDomainFromUrl(tab.url);
-
-    websites = await getDataFromStorage(websites);
-    if (websites[currentTabDomain] === undefined) {
-      handleStopTracking();
-    } else {
-      handleChangedToTrackedDomain(currentTabDomain);
-    }
+  websites = await getDataFromStorage(websites);
+  if (websites[currentTabDomain] === undefined) {
+    handleStopTracking();
+  } else {
+    handleChangedToTrackedDomain(currentTabDomain);
   }
 }
 
