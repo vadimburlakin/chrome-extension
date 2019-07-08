@@ -5,21 +5,20 @@ chrome.runtime.onMessage.addListener(onMessage);
 //depending on message type decide what action to take
 function onMessage(message, sender, sendResponse) {
   switch (message.type) {
-    case "START_TRACKING":
-      {
-        handleStartTracking(message);
-        break;
-      }
-    case "GET_TRACKING_DATA":
-      {
-        handleShowTrackingData().then(sendResponse);
-        return true;
-        break;
-      }
-    case "CLEAR_TRACKING_DATA":
-      {
-        handleClearData();
-      }
+  case "START_TRACKING":
+  {
+    handleStartTracking(message);
+    break;
+  }
+  case "GET_TRACKING_DATA":
+  {
+    handleShowTrackingData().then(sendResponse);
+    return true;
+  }
+  case "CLEAR_TRACKING_DATA":
+  {
+    handleClearData();
+  }
   }
 }
 /* END Handling Messages From Popup */
@@ -47,7 +46,7 @@ function getDomainFromUrl(url) {
   if (url.includes("chrome://")) {
     return url;
   } else {
-    const matches = url.match(/^(https?:\/\/[^\/]+)/);
+    const matches = url.match(/^(https?:\/\/[^/]+)/);
     return matches[1];
   }
 }
@@ -74,11 +73,14 @@ function getDataFromStorage(data) {
 async function handleStartTracking(message) {
   let domain = getDomainFromUrl(message.url);
 
+  /* eslint-disable-next-line require-atomic-updates */
   websites = await getDataFromStorage(websites);
+  /* eslint-disable-next-line require-atomic-updates */
   if (websites[domain] === undefined) {
     currentlyTrackedDomain.domain = domain;
     currentlyTrackedDomain.windowId = message.windowId;
     startTracking = new Date();
+    /* eslint-disable-next-line require-atomic-updates */
     websites[domain] = 0;
     await sendDataToStorage(websites);
   } else {
@@ -88,7 +90,9 @@ async function handleStartTracking(message) {
 
 //stop tracking in case we changed active tab and count tracking time
 async function handleStopTracking() {
+  /* eslint-disable-next-line require-atomic-updates */
   websites = await getDataFromStorage(websites);
+  /* eslint-disable-next-line require-atomic-updates */
   websites[currentlyTrackedDomain.domain] += Math.floor((new Date() - startTracking) / 1000);
   //don't forget to clear the value
   currentlyTrackedDomain.domain = null;
@@ -97,6 +101,7 @@ async function handleStopTracking() {
 
 //check in case we changed to the tab that is already tracked
 async function handleChangedToTrackedDomain(domain) {
+  /* eslint-disable-next-line require-atomic-updates */
   websites = await getDataFromStorage(websites);
   if (websites[domain] !== undefined) {
     currentlyTrackedDomain.domain = domain;
@@ -142,7 +147,7 @@ chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
 //react to domain change in the tracked tab
 async function handleTabsDomainChange(tabId, changeInfo, tab) {
   let currentTabDomain = getDomainFromUrl(tab.url);
-
+  /* eslint-disable-next-line require-atomic-updates */
   websites = await getDataFromStorage(websites);
   if (currentlyTrackedDomain.domain !== null && websites[currentTabDomain] === undefined) {
     handleStopTracking();
@@ -153,7 +158,7 @@ async function handleTabsDomainChange(tabId, changeInfo, tab) {
 
 //listen in case the tab we are tracking is opened in another window
 chrome.windows.onFocusChanged.addListener(windowChange);
-
+/* eslint-disable-next-line no-unused-vars */
 function windowChange(windowId) {
   if (currentlyTrackedDomain.domain !== null) {
     handleStopTracking();

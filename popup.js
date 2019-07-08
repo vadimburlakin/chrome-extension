@@ -21,7 +21,7 @@ let data = {
 var ctx = document.getElementById("myChart");
 var chart = null;
 
-window.addEventListener("load", function load(event) {
+window.addEventListener("load", function load() {
   //event listener for Track button
   var trackButton = document.getElementById("track_button");
 
