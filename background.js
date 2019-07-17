@@ -30,6 +30,12 @@ let websites = {};
 let currentlyTrackedDomain = null;
 let startTracking = null;
 
+chrome.storage.sync.set({
+  websites: {}
+}, function() {
+  console.log("object sent successfully");
+});
+
 
 //get the domain from URL
 function getDomainFromUrl(url) {
@@ -58,6 +64,7 @@ function getDataFromStorage(data) {
     });
   });
 }
+
 
 //execute in case "track" button was clicked
 async function handleStartTracking(message) {
@@ -159,7 +166,6 @@ async function handleShowTrackingData() {
 
 //Clear data when Clear button is clicked
 
-async function handleClearData() {
-  websites = {};
-  await sendDataToStorage(websites);
+ function handleClearData() {
+  chrome.storage.sync.clear();
 };
