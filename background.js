@@ -30,12 +30,6 @@ let websites = {};
 let currentlyTrackedDomain = null;
 let startTracking = null;
 
-chrome.storage.sync.set({
-  websites
-}, function() {
-  console.log("object sent successfully");
-});
-
 
 //get the domain from URL
 function getDomainFromUrl(url) {
