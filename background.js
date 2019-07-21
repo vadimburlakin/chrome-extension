@@ -114,7 +114,7 @@ async function handleShowTrackingData() {
   return await getDataFromStorage(websites);
 }
 
-//Clear data when Clear button is clicked
+//Delete all storage data when Clear button is clicked
 async function handleClearData() {
   websites = {};
   await sendDataToStorage(websites);
