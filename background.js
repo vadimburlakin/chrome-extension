@@ -31,13 +31,6 @@ let currentlyTrackedDomain = {
 };
 let startTracking = null;
 
-//sending empty websites object to storage for set up
-chrome.storage.sync.set({
-  websites
-}, function() {
-  console.log("object sent successfully");
-});
-
 /* END Necessary Variables Declaration */
 
 /* Functions for Argus Chrome Extension */
@@ -61,9 +54,9 @@ function sendDataToStorage(data) {
 }
 
 //promisified function to get data from chrome storage
-function getDataFromStorage(data) {
+function getDataFromStorage() {
   return new Promise(resolve => {
-    chrome.storage.sync.get(data, function(result) {
+    chrome.storage.sync.get(null, function(result) {
       resolve(result);
     });
   });
@@ -74,7 +67,7 @@ async function handleStartTracking(message) {
   let domain = getDomainFromUrl(message.url);
 
   /* eslint-disable-next-line require-atomic-updates */
-  websites = await getDataFromStorage(websites);
+  websites = await getDataFromStorage();
   /* eslint-disable-next-line require-atomic-updates */
   if (websites[domain] === undefined) {
     currentlyTrackedDomain.domain = domain;
@@ -91,7 +84,7 @@ async function handleStartTracking(message) {
 //stop tracking in case we changed active tab and count tracking time
 async function handleStopTracking() {
   /* eslint-disable-next-line require-atomic-updates */
-  websites = await getDataFromStorage(websites);
+  websites = await getDataFromStorage();
   /* eslint-disable-next-line require-atomic-updates */
   websites[currentlyTrackedDomain.domain] += Math.floor((new Date() - startTracking) / 1000);
   //don't forget to clear the value
@@ -102,7 +95,7 @@ async function handleStopTracking() {
 //check in case we changed to the tab that is already tracked
 async function handleChangedToTrackedDomain(domain) {
   /* eslint-disable-next-line require-atomic-updates */
-  websites = await getDataFromStorage(websites);
+  websites = await getDataFromStorage();
   if (websites[domain] !== undefined) {
     currentlyTrackedDomain.domain = domain;
     startTracking = new Date();
@@ -111,13 +104,12 @@ async function handleChangedToTrackedDomain(domain) {
 
 //Show Tracking Data
 async function handleShowTrackingData() {
-  return await getDataFromStorage(websites);
+  return await getDataFromStorage();
 }
 
-//Clear data when Clear button is clicked
-async function handleClearData() {
-  websites = {};
-  await sendDataToStorage(websites);
+//Delete all storage data when Clear button is clicked
+function handleClearData() {
+  chrome.storage.sync.clear();
 }
 /* END Functions for Argus Chrome Extension */
 
@@ -148,7 +140,7 @@ chrome.tabs.onUpdated.addListener(handleTabsDomainChange);
 async function handleTabsDomainChange(tabId, changeInfo, tab) {
   let currentTabDomain = getDomainFromUrl(tab.url);
   /* eslint-disable-next-line require-atomic-updates */
-  websites = await getDataFromStorage(websites);
+  websites = await getDataFromStorage();
   if (currentlyTrackedDomain.domain !== null && websites[currentTabDomain] === undefined) {
     handleStopTracking();
   } else {
