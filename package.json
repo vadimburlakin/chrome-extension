@@ -4,7 +4,7 @@
   "description": "",
   "main": "background.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "lint": "eslint --ext js .",
     "lintfix": "eslint --ext js . --fix"
   },
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/miniengineer/chrome-extension#readme",
   "devDependencies": {
-    "eslint": "^6.0.1"
+    "eslint": "^6.0.1",
+    "jest": "^24.8.0"
   }
 }
