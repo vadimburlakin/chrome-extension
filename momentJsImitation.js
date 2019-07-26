@@ -1,10 +1,10 @@
-function showRightTime(time) {
+const editTime = (time) => {
   if (time < 60) {
     return `${time} seconds`;
   } else if (time > 59 && time < 3600) {
-    time /= 60;
-    let minutes = Math.floor(time);
-    let seconds = (time - minutes) * 60;
+    let minutes = Math.floor(time / 60);
+    let seconds = (time - (time / 60)) * 60;
+    console.log(seconds);
     switch (seconds) {
       case 0:
         return `${minutes} minutes`;
@@ -23,3 +23,5 @@ function showRightTime(time) {
     }
   }
 }
+
+module.exports = editTime;
