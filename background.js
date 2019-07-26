@@ -83,6 +83,7 @@ async function handleStartTracking(message) {
 
 //stop tracking in case we changed active tab and count tracking time
 async function handleStopTracking() {
+  if (currentlyTrackedDomain.domain !== null) {
   /* eslint-disable-next-line require-atomic-updates */
   websites = await getDataFromStorage();
   /* eslint-disable-next-line require-atomic-updates */
@@ -90,6 +91,7 @@ async function handleStopTracking() {
   //don't forget to clear the value
   currentlyTrackedDomain.domain = null;
   await sendDataToStorage(websites);
+  }
 }
 
 //check in case we changed to the tab that is already tracked
