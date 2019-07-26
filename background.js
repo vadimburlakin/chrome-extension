@@ -122,6 +122,7 @@ chrome.tabs.onActivated.addListener(activeTabChange);
 //take actions in case active tab is changed
 function activeTabChange(activeInfo) {
   //check and take actions in case if changed from tracked tab
+  //if statement is updated to eliminate race condition problem in case of window and tab change at the same time
   if (currentlyTrackedDomain.domain !== null && currentlyTrackedDomain.windowId === activeInfo.windowId) {
     handleStopTracking();
   }
