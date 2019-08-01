@@ -3,13 +3,14 @@ const editTime = (time) => {
     return `${time} seconds`;
   } else if (time > 59 && time < 3600) {
     let minutes = Math.floor(time / 60);
-    let seconds = (time - (time / 60)) * 60;
-    console.log(seconds);
+    let seconds = time - (Math.floor(time / 60) * 60);
     switch (seconds) {
       case 0:
         return `${minutes} minutes`;
+      case 1:
+        return `${minutes} minutes ${seconds} second`;
       default:
-        return `${minutes} minutes ${seconds} seconds`
+        return `${minutes} minutes ${seconds} seconds`;
     }
   } else if (time > 3599) {
     time = Math.floor(time / 60);
