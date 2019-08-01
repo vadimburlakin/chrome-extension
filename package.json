@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/miniengineer/chrome-extension.git"
   },
-  "author": "MiniEngineer",
+  "author": "Vadim Burlakin (with some support of MiniEngineer)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/miniengineer/chrome-extension/issues"
